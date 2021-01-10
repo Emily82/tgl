@@ -38,9 +38,11 @@ TGLC_WRAPPER_ASSOC(bn,BIGNUM)
 
 TGLC_rsa *TGLC_rsa_new (unsigned long e, int n_bytes, const unsigned char *n) {
   RSA *ret = RSA_new ();
-  ret->e = unwrap_bn (TGLC_bn_new ());
-  TGLC_bn_set_word (wrap_bn (ret->e), e);
-  ret->n = unwrap_bn (TGLC_bn_bin2bn (n, n_bytes, NULL));
+  RSA_set0_key (ret, unwrap_bn (TGLC_bn_bin2bn (n, n_bytes, NULL)), 
+		     unwrap_bn (TGLC_bn_new ()), NULL);
+//   ret->e = unwrap_bn (TGLC_bn_new ());
+//   TGLC_bn_set_word (wrap_bn (ret->e), e);
+//   ret->n = unwrap_bn (TGLC_bn_bin2bn (n, n_bytes, NULL));
   return wrap_rsa (ret);
 }
 
@@ -49,8 +51,21 @@ TGLC_rsa *TGLC_rsa_new (unsigned long e, int n_bytes, const unsigned char *n) {
     return wrap_bn (unwrap_rsa (key)->M);                                      \
   }                                                                            \
 
-RSA_GETTER(n);
-RSA_GETTER(e);
+TGLC_bn *TGLC_rsa_n (TGLC_rsa *key) {
+    BIGNUM *n;
+    RSA_get0_key(unwrap_rsa(key), (const BIGNUM **) &n, NULL, NULL);
+    return wrap_bn (n);
+    //return wrap_bn (unwrap_rsa (key)->n);
+}
+
+TGLC_bn *TGLC_rsa_e (TGLC_rsa *key) {
+    BIGNUM *e;
+    RSA_get0_key(unwrap_rsa(key), NULL, (const BIGNUM **) &e, NULL);
+    return wrap_bn (e);
+    //return wrap_bn (unwrap_rsa (key)->e);
+}
+// RSA_GETTER(n);
+// RSA_GETTER(e);
 
 void TGLC_rsa_free (TGLC_rsa *p) {
   RSA_free (unwrap_rsa (p));
